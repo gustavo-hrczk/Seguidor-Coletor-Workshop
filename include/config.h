@@ -160,7 +160,7 @@
 // Valor recomendado = ponto médio entre max_linha e min_fundo.
 // ============================================================================
 
-#define THRESHOLD_LINE_SENSOR  650
+#define THRESHOLD_LINE_SENSOR  571
 
 
 // ============================================================================
