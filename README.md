@@ -29,7 +29,7 @@ está completa, testada e documentada — o `main.cpp` é construído por você.
 | Microcontrolador      | Arduino Nano (ATmega328P)                      |
 | Driver de motor       | L298N                                          |
 | Motores               | Micro Motor com Caixa de Redução 6V — Robocore |
-| Sensor de linha       | QTR-6 analógico                                |
+| Sensor de linha       | x6 QTR-1 analógico                             |
 | Sensor de distância   | HC-SR04 (ultrassônico)                         |
 | Atuador da garra      | Servo SG90                                     |
 
