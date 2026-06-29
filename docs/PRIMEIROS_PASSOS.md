@@ -14,6 +14,9 @@
 2. Clique em **Open** → **Open Project**
 3. Selecione a pasta deste repositório
 
+> O `platformio.ini` já está configurado para usar `programas/` como pasta
+> de origem — não é necessário copiar nada para `src/`.
+
 ## 3. Compilar (sem gravar ainda)
 
 1. Na barra inferior do VS Code, clique no ícone de check (✓) — "Build"
@@ -34,7 +37,8 @@
 ## 5. Abrir o Monitor Serial
 
 1. Clique no ícone de tomada/plug na barra inferior — "Monitor"
-2. Você deve ver mensagens aparecendo se o código tiver `Serial.println()`
+2. Confirme que a velocidade está em **9600 baud**
+3. Você verá o menu do `debug_mode.cpp` com os 6 testes disponíveis
 
 ---
 
@@ -58,22 +62,15 @@
 
 ### Erro de compilação mencionando alguma função do `LineSensor`, `MotorController` etc.
 
-- Confira se não há `main.cpp` duplicado — o projeto deve ter **apenas um**
-  arquivo com `setup()` e `loop()` na pasta `src/`. Se você copiou o
-  `test_components.cpp` para dentro de `src/`, remova o `main.cpp` de lá
-  primeiro ou mova o teste para fora antes de compilar o programa principal.
+- Confira se a pasta `programas/` tem **apenas um** arquivo com `setup()` e
+  `loop()`. Se você criar seu próprio programa de robô (seguindo
+  `docs/ROTEIRO.md`), remova ou renomeie `debug_mode.cpp` antes de
+  adicionar o seu — não pode haver dois arquivos com `setup()`/`loop()`
+  compilando juntos.
 
----
+### Quero escrever meu próprio programa de robô, e não usar o `debug_mode.cpp`
 
-## Quando usar o `ferramentas_calibracao/test_components.cpp`
-
-Esse arquivo tem 6 testes isolados (motores, sensor de linha, ultrassônico,
-garra, simulação de coleta e calibração de threshold). Para usá-lo:
-
-1. Copie temporariamente o `main.cpp` da pasta `src/` para fora (ex: para a raiz do projeto, fora de `src/`)
-2. Copie `test_components.cpp` para dentro de `src/`
-3. Compile e grave normalmente
-4. Abra o monitor serial — vai aparecer um menu numerado
-5. Quando terminar de calibrar, faça o caminho inverso para voltar ao seu `main.cpp`
-
-> Só pode haver um arquivo com `setup()`/`loop()` em `src/` por vez.
+- Crie um novo arquivo `.cpp` em `programas/` com seu próprio `setup()`/`loop()`
+- Remova ou renomeie `debug_mode.cpp` antes de compilar
+- Siga `docs/ROTEIRO.md` para a progressão sugerida
+- Consulte `docs/referencia/` para ver dois exemplos completos já testados

@@ -32,7 +32,7 @@
 #define PIN_IN2 7
 #define PIN_IN3 2
 #define PIN_IN4 4
-#define PIN_ENA 6    // PWM canal A — Timer 1
+#define PIN_ENA 6    // PWM canal A — Timer 0
 #define PIN_ENB 3    // PWM canal B — Timer 2
 
 // --- Sensores de linha QTR-1 analógico × 6 ---
@@ -89,7 +89,7 @@
 // Problema: inversão brusca de sentido (ex: +180 -> -180 PWM em um ciclo)
 // empurra a corrente instantaneamente em direção ao stall, gerando pico
 // mecânico e elétrico que danifica as engrenagens da caixa de redução.
-// Foi exatamente o que causou a falha durante os testes do main_robo.
+// Esse pico já causou falha real de engrenagem durante testes de bancada.
 //
 // Solução — duas rampas implementadas internamente em setMotorSpeed():
 //
@@ -160,7 +160,7 @@
 // Valor recomendado = ponto médio entre max_linha e min_fundo.
 // ============================================================================
 
-#define THRESHOLD_LINE_SENSOR  571
+#define THRESHOLD_LINE_SENSOR  828
 
 
 // ============================================================================
@@ -219,12 +219,15 @@
 // ============================================================================
 // 8. SENSOR ULTRASSÔNICO HC-SR04
 //
-// Fases de aproximação:
-//   OBJECT_NOT_DETECTED : sem leitura estável
-//   PHASE_1_DISTANT     : dist >= ULTRASONIC_DISTANCE_LONG  → velocidade normal
-//   PHASE_2_APPROACHING : dist >= ULTRASONIC_DISTANCE_SHORT → desacelera
-//   PHASE_3_CONTACT     : dist <  ULTRASONIC_DISTANCE_SHORT → quase parado
-//   Gatilho de coleta   : dist <= ULTRASONIC_DISTANCE_CONTACT → STATE_COLLECTING
+// Fases de aproximação (4 níveis — ver UltrasonicSensor::ApproachPhase):
+//   OBJECT_NOT_DETECTED  : sem leitura estável
+//   PHASE_1_DISTANT      : dist >= ULTRASONIC_DISTANCE_LONG     → velocidade normal
+//   PHASE_2_APPROACHING  : dist >= ULTRASONIC_DISTANCE_SHORT    → desacelera
+//   PHASE_3_CONTACT      : dist >= ULTRASONIC_DISTANCE_CONTACT  → quase parado
+//   PHASE_4_CONTACT_ZONE : dist <  ULTRASONIC_DISTANCE_CONTACT  → gatilho de coleta
+//
+// O gatilho de STATE_COLLECTING usa ULTRASONIC_DISTANCE_CONTACT diretamente
+// (equivalente a estar em PHASE_4_CONTACT_ZONE).
 //
 // ULTRASONIC_TIMEOUT_US: timeout do pulseIn em µs.
 //   10000µs cobre até ~170cm — suficiente para o projeto.
@@ -260,12 +263,8 @@
 // 10. COLETA AUTÔNOMA
 //
 // Parâmetros do ciclo STATE_COLLECTING.
-// Limiares de distância para troca de velocidade de aproximação (cm).
 // Tempos de manobra: calibrar na pista com o peso real do robô.
 // ============================================================================
-
-#define APPROACH_DIST_LONG       35   // cm — troca FAST → MEDIUM
-#define APPROACH_DIST_MEDIUM     25   // cm — troca MEDIUM → SLOW
 
 #define MANEUVER_SPEED_LOADED    180   // PWM com objeto na garra
 #define MANEUVER_SPEED_UNLOADED  160   // PWM no retorno sem objeto

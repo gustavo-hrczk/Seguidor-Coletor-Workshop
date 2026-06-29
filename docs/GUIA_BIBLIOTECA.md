@@ -9,7 +9,8 @@ permite adaptar a biblioteca para situações que não estão aqui.
 ## Visão geral da arquitetura
 
 ```
-main.cpp  (você escreve)
+debug_mode.cpp  (programa principal — testes isolados)
+seu próprio programa  (se você seguir docs/ROTEIRO.md)
     │
     ├── LineSensor         → lê a linha
     ├── MotorController    → controla os motores
@@ -67,6 +68,8 @@ lineSensor.initialize();                                  // chamar uma vez no s
 lineSensor.readSensors();                                 // chamar uma vez por ciclo do loop
 float pos = lineSensor.getLinePosition();                 // -1.0 a +1.0
 LineSensor::LinePattern p = lineSensor.getLinePattern();  // classificação
+bool ativo = lineSensor.isLineDetected();                 // true se ao menos 1 sensor ativo
+lineSensor.printSensorValues();                           // diagnóstico no Serial
 ```
 
 `LinePattern` classifica a leitura em: `STRAIGHT`, `CURVE_LIGHT`,
@@ -95,13 +98,15 @@ MOTOR_TRIM_DIR  // fator multiplicativo do motor direito  (0.80–1.20)
 ```
 
 Esses fatores são aplicados *depois* de qualquer cálculo de velocidade —
-o resto do código nunca precisa saber que o trim existe.
+o resto do código nunca precisa saber que o trim existe. Nos robôs
+entregues, ambos estão calibrados em `1.00` (neutro) — ajuste apenas se
+notar desvio em linha reta (veja o Teste 1 do `debug_mode.cpp`).
 
 ### Decisão técnica: rampas de proteção do motor
 
 O motor usado (Micro Motor Robocore 6V) tem corrente de stall (eixo
 travado) de **1.6A**. Inverter o sentido do motor instantaneamente
-(de +180 PWM para -180 PWM em um único comando) empurra a corrente
+(de +200 PWM para -200 PWM em um único comando) empurra a corrente
 instantaneamente em direção a esse valor de stall — o pico mecânico
 resultante já causou dano real de engrenagem durante o desenvolvimento.
 
@@ -151,7 +156,8 @@ motor.resetPD();                                    // chamar sempre após parar
 
 ### O que faz
 
-Lê o sensor HC-SR04 e valida a leitura antes de considerá-la confiável.
+Lê o sensor HC-SR04 e valida a leitura antes de considerá-la confiável,
+classificando a distância em fases de aproximação.
 
 ### Decisão técnica: por que validar antes de confiar na leitura?
 
@@ -172,13 +178,34 @@ A tolerância também é adaptativa: ±2cm fixo até 20cm de distância,
 percentual com teto de ±4cm acima disso — o ruído do sensor cresce
 proporcionalmente com a distância.
 
+### Decisão técnica: quatro fases de aproximação, não três
+
+A primeira versão classificava a distância em apenas 3 fases, e a fase
+mais próxima ("contato") cobria todo o intervalo abaixo de
+`ULTRASONIC_DISTANCE_SHORT` — por exemplo, de 0 a 20cm inteiros. Isso
+fazia o sensor reportar "contato" mesmo com o objeto a 15–19cm de
+distância, bem antes do gatilho real de coleta (`ULTRASONIC_DISTANCE_CONTACT`,
+tipicamente 4cm).
+
+A versão atual usa 4 fases, isolando a zona de gatilho real:
+
+```cpp
+PHASE_1_DISTANT      // dist >= ULTRASONIC_DISTANCE_LONG     → ainda distante
+PHASE_2_APPROACHING  // dist >= ULTRASONIC_DISTANCE_SHORT    → se aproximando
+PHASE_3_CONTACT      // dist >= ULTRASONIC_DISTANCE_CONTACT  → perto, ainda não é o gatilho
+PHASE_4_CONTACT_ZONE // dist <  ULTRASONIC_DISTANCE_CONTACT  → gatilho real de coleta
+```
+
 ### Métodos principais
 
 ```cpp
 ultrasonic.initialize();
-int dist = ultrasonic.readDistance();         // retorna -1 se não confiável
-bool ok  = ultrasonic.isReadingStable();      // true após validação completa
-ultrasonic.resetValidation();                 // chamar após cada coleta concluída
+int  dist  = ultrasonic.readDistance();               // retorna -1 se não confiável
+bool ok    = ultrasonic.isReadingStable();            // true após validação completa
+auto fase  = ultrasonic.getApproachPhase();           // classificação em 4 níveis
+int  last  = ultrasonic.getLastValidDistance();       // última distância confirmada
+ultrasonic.resetValidation();                         // chamar após cada coleta concluída
+ultrasonic.printDistance();                           // diagnóstico no Serial
 ```
 
 ---
@@ -204,6 +231,17 @@ fora da posição. Após o movimento terminar e aguardar estabilização
 (`SERVO_STABILIZATION_TIME`), o sinal é desligado via `detach()`. A
 posição mecânica é mantida pela própria engrenagem do servo.
 
+### Decisão técnica: `initialize()` força a abertura física
+
+Se o servo estava fisicamente fechado antes do upload (posição retida
+mecanicamente pela engrenagem), apenas reconectar o sinal sem comandar
+um movimento real deixaria a garra fechada — o estado lógico (`_state`)
+diria "aberta" sem que isso fosse verdade no mundo físico.
+
+A solução é `initialize()` ignorar qualquer estado anterior e sempre
+forçar o movimento completo grau a grau até `SERVO_ANGLE_OPEN`, assumindo
+o pior caso (garra fechada) antes de começar.
+
 ### Bug histórico corrigido: underflow de `uint8_t`
 
 A primeira versão usava `uint8_t` para a variável de iteração do
@@ -219,6 +257,8 @@ gripper.initialize();    // sempre força abertura física, independente do esta
 gripper.open();
 gripper.close();
 bool fechada = gripper.isClosed();
+bool aberta  = gripper.isOpen();
+gripper.emergencyStop();  // desliga o servo imediatamente — usar só em falha crítica
 ```
 
 ---
@@ -229,3 +269,14 @@ Todas as constantes de calibração (pinagem, threshold, PID, trim, ângulos
 do servo, zonas de distância, tempos de manobra) ficam neste arquivo.
 Nenhum módulo tem valores "hardcoded" — alterar `config.h` recalibra o
 sistema sem tocar em nenhum `.cpp`.
+
+---
+
+## Onde ver tudo isso em ação
+
+- `programas/debug_mode.cpp` — exercita cada módulo isoladamente, com
+  diagnóstico detalhado no Monitor Serial. É o melhor lugar para ver
+  cada método sendo chamado em contexto real.
+- `docs/referencia/` — dois exemplos de programa de robô completo,
+  integrando todos os módulos em uma máquina de estados (seguir linha,
+  detectar objeto, coletar, recuperar linha perdida).
