@@ -128,9 +128,9 @@ mesmo sendo pequena.
 PID = Proporcional + Integral + Derivativo.
 
 - **P** (`PD_KP`): corrige o erro atual — quanto mais desviado da linha, mais corrige
-- **D** (`PD_KD`): amortece oscilação — reage à *velocidade* de mudança do erro
 - **I** (`PD_KI`): corrige deriva acumulada — sem isso, o robô pode ficar
   consistentemente um pouco torto em retas longas sem nunca convergir ao centro
+- **D** (`PD_KD`): amortece oscilação — reage à *velocidade* de mudança do erro
 
 O termo integral tem proteção anti-windup: dentro de uma zona morta
 (`PID_INTEGRAL_DEADZONE`), o acumulador é zerado — ruído de leitura em

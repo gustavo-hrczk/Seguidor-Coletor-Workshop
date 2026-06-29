@@ -153,7 +153,7 @@ void testLineSensors() {
     while (millis() - start < 20000) {
         sensor.readSensors();
 
-        if (millis() - lastPrint < 500) continue;
+        if (millis() - lastPrint < 1000) continue;
         lastPrint = millis();
         const __FlashStringHelper* patLabel;
         switch (sensor.getLinePattern()) {

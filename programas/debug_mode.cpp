@@ -42,18 +42,16 @@ void setup() {
     Serial.begin(BAUD_RATE);
     delay(1000);
 
-    Serial.println(F("\n╔════════════════════════════════════════╗"));
-    Serial.println(F("║    TESTES DE COMPONENTES               ║"));
-    Serial.println(F("╠════════════════════════════════════════╣"));
-    Serial.print  (F("║  BASE_SPEED="));  Serial.print(BASE_SPEED);
-    Serial.print  (F("  Kp="));           Serial.print(PD_KP, 2);
+    Serial.println(F("\n=== CONFIGURACAO ATUAL ==================================="));
+    Serial.print  (F("BASE_SPEED=")); Serial.print(BASE_SPEED);
+    Serial.print  (F("\tKp="));          Serial.print(PD_KP, 2);
     Serial.print  (F("  Ki="));           Serial.println(PD_KI, 3);
-    Serial.print  (F("║  TrimESQ="));     Serial.print(MOTOR_TRIM_ESQ, 2);
-    Serial.print  (F("  TrimDIR="));      Serial.println(MOTOR_TRIM_DIR, 2);
-    Serial.print  (F("║  Threshold="));   Serial.print(THRESHOLD_LINE_SENSOR);
-    Serial.print  (F("  Contato="));      Serial.print(ULTRASONIC_DISTANCE_CONTACT);
+    Serial.print  (F("TrimESQ="));    Serial.print(MOTOR_TRIM_ESQ, 2);
+    Serial.print  (F("\tTrimDIR="));   Serial.println(MOTOR_TRIM_DIR, 2);
+    Serial.print  (F("Threshold="));  Serial.print(THRESHOLD_LINE_SENSOR);
+    Serial.print  (F("\tContato="));    Serial.print(ULTRASONIC_DISTANCE_CONTACT);
     Serial.println(F("cm"));
-    Serial.println(F("╚════════════════════════════════════════╝"));
+    Serial.println(F("\n=== TESTES DE COMPONENTES ================================"));
 
     printMenu();
 }
@@ -85,7 +83,8 @@ void loop() {
 // Utilitário interno
 // ============================================================================
 void printMenu() {
-    Serial.println(F("\n1-Motores  2-LineSensor  3-Ultrasson  4-Garra  5-SincGarra  6-Threshold"));
+    Serial.println(F("1-Motores\t2-SensorLinha\t3-Ultrassonico"));
+    Serial.println(F("4-ServoGarra\t5-Coleta\t6-Threshold"));
     Serial.println(F("Digite o número do teste:"));
 }
 
@@ -97,7 +96,7 @@ void printMenu() {
 // Se desviar em FORWARD, ajustar MOTOR_TRIM_DIR/ESQ no config.h.
 // ============================================================================
 void testMotors() {
-    Serial.println(F("=== TESTE 1: MOTORES ==="));
+    Serial.println(F("=== TESTE 1: MOTORES ====================================="));
     Serial.print  (F("BASE_SPEED=")); Serial.print(BASE_SPEED);
     Serial.print  (F("  TrimESQ=")); Serial.print(MOTOR_TRIM_ESQ, 2);
     Serial.print  (F("  TrimDIR=")); Serial.println(MOTOR_TRIM_DIR, 2);
@@ -116,13 +115,13 @@ void testMotors() {
     Serial.println(F("[2/4] RE"));
     motor.move(MotorController::BACKWARD, spd);   delay(2000); motor.stop(); delay(500);
 
-    Serial.println(F("[3/4] GIRO ESQUERDA (eixo)"));
+    Serial.println(F("[3/4] CURVA À ESQUERDA"));
     motor.move(MotorController::TURN_LEFT, spd);  delay(2000); motor.stop(); delay(500);
 
-    Serial.println(F("[4/4] GIRO DIREITA (eixo)"));
+    Serial.println(F("[4/4] CURVA À DIREITA"));
     motor.move(MotorController::TURN_RIGHT, spd); delay(2000); motor.stop(); delay(500);
 
-    Serial.println(F("\n✓ Teste 1 concluído"));
+    Serial.println(F("\n✓ TESTE 1 CONCLUÍDO"));
 }
 
 // ============================================================================
@@ -138,11 +137,11 @@ void testMotors() {
 //   [ ] pos positiva ao desviar para direita?
 // ============================================================================
 void testLineSensors() {
-    Serial.println(F("=== TESTE 2: SENSOR DE LINHA ==="));
-    Serial.print  (F("Threshold=")); Serial.println(THRESHOLD_LINE_SENSOR);
+    Serial.println(F("=== TESTE 2: SENSOR DE LINHA ============================="));
     Serial.println(F("Convencao: raw <= threshold = ATIVO (linha branca)"));
-    Serial.println(F("Posicao:  -1.0=esq extremo  0.0=centro  +1.0=dir extremo"));
-    Serial.println(F("Posicione o robo sobre a linha. Movimente por 20s."));
+    Serial.print  (F("Threshold:\t")); Serial.println(THRESHOLD_LINE_SENSOR);
+    Serial.println(F("Posicao:\t-1.0=ESQUERDA\t0.0=CENTRO\t+1.0=DIREITA"));
+    Serial.println(F("Posicione o robo sobre a linha branca. Movimente por 20s."));
     delay(2000);
 
     LineSensor sensor;
@@ -154,7 +153,7 @@ void testLineSensors() {
     while (millis() - start < 20000) {
         sensor.readSensors();
 
-        if (millis() - lastPrint < 500) continue;
+        if (millis() - lastPrint < 1000) continue;
         lastPrint = millis();
         const __FlashStringHelper* patLabel;
         switch (sensor.getLinePattern()) {
@@ -179,7 +178,7 @@ void testLineSensors() {
         Serial.print(F("  dir="));       Serial.println(dirLabel);
     }
 
-    Serial.println(F("\n✓ Teste 2 concluído"));
+    Serial.println(F("\n✓ TESTE 2 CONCLUÍDO"));
 }
 
 // ============================================================================
@@ -193,10 +192,10 @@ void testLineSensors() {
 //   fase     = ApproachPhase atual
 // ============================================================================
 void testUltrasonic() {
-    Serial.println(F("=== TESTE 3: SENSOR ULTRASSÔNICO ==="));
-    Serial.print  (F("LONG="));    Serial.print(ULTRASONIC_DISTANCE_LONG);
-    Serial.print  (F("cm  SHORT=")); Serial.print(ULTRASONIC_DISTANCE_SHORT);
-    Serial.print  (F("cm  CONTATO=")); Serial.print(ULTRASONIC_DISTANCE_CONTACT);
+    Serial.println(F("=== TESTE 3: SENSOR ULTRASSÔNICO ========================="));
+    Serial.print  (F("LONG:"));    Serial.print(ULTRASONIC_DISTANCE_LONG);
+    Serial.print  (F("cm  SHORT:")); Serial.print(ULTRASONIC_DISTANCE_SHORT);
+    Serial.print  (F("cm  CONTATO:")); Serial.print(ULTRASONIC_DISTANCE_CONTACT);
     Serial.println(F("cm"));
     Serial.println(F("Aproxime um objeto. Lendo por 20s..."));
     delay(1500);
@@ -215,18 +214,18 @@ void testUltrasonic() {
             case UltrasonicSensor::PHASE_2_APPROACHING:  faseLabel = F("F2-APROX");        break;
             case UltrasonicSensor::PHASE_3_CONTACT:      faseLabel = F("F3-PERTO");        break;
             case UltrasonicSensor::PHASE_4_CONTACT_ZONE: faseLabel = F("F4-GATILHO");      break;
-            default:                                      faseLabel = F("SEM-OBJETO");      break;
+            default:                                     faseLabel = F("SEM-OBJETO");      break;
         }
 
-        Serial.print(F("bruta="));  Serial.print(us.getCurrentDistance());
-        Serial.print(F("cm  val=")); Serial.print(val);
+        Serial.print(F("bruta="));     Serial.print(us.getCurrentDistance());
+        Serial.print(F("cm  val="));   Serial.print(val);
         Serial.print(F("cm  estav=")); Serial.print(us.isReadingStable() ? F("S") : F("N"));
-        Serial.print(F("  fase="));  Serial.println(faseLabel);
+        Serial.print(F("  fase="));    Serial.println(faseLabel);
 
         delay(300);
     }
 
-    Serial.println(F("\n✓ Teste 3 concluído"));
+    Serial.println(F("\n✓ TESTE 3 CONCLUÍDO"));
 }
 
 // ============================================================================
@@ -237,10 +236,10 @@ void testUltrasonic() {
 // Observar: movimento suave grau a grau sem tranco.
 // ============================================================================
 void testGripper() {
-    Serial.println(F("=== TESTE 4: SERVO GARRA ==="));
-    Serial.print  (F("Angulos: OPEN=")); Serial.print(SERVO_ANGLE_OPEN);
-    Serial.print  (F("  CLOSED="));      Serial.print(SERVO_ANGLE_CLOSED);
-    Serial.print  (F("  step_ms="));     Serial.println(SERVO_STEP_DELAY_MS);
+    Serial.println(F("=== TESTE 4: SERVO GARRA ================================"));
+    Serial.print  (F("Angulos: OPEN:")); Serial.print(SERVO_ANGLE_OPEN);
+    Serial.print  (F("  CLOSED:"));      Serial.print(SERVO_ANGLE_CLOSED);
+    Serial.print  (F("  step_ms:"));     Serial.println(SERVO_STEP_DELAY_MS);
 
     GripperServo gripper;
     gripper.initialize();
@@ -270,7 +269,7 @@ void testGripper() {
     gripper.close();
     gripper.close();
 
-    Serial.println(F("\n✓ Teste 4 concluído"));
+    Serial.println(F("\n✓ TESTE 4 CONCLUÍDO"));
 }
 
 // ============================================================================
@@ -287,7 +286,7 @@ void testGripper() {
 //   → repete até TEST5_DURATION ms
 // ============================================================================
 void testGripperSync() {
-    Serial.println(F("=== TESTE 5: SINCRONIA ULTRASSÔNICO + GARRA ==="));
+    Serial.println(F("=== TESTE 5: COLETA DE OBJETO ==========================="));
     Serial.println(F("Aproxime um objeto e mantenha na zona de contato."));
     Serial.print  (F("Tempo estavel: ")); Serial.print(TEST5_STABLE_MS);
     Serial.print  (F("ms  Hold: "));      Serial.print(TEST5_HOLD_MS);
@@ -368,7 +367,7 @@ void testGripperSync() {
     }
 
     gripper.open();
-    Serial.print(F("\n✓ Teste 5 concluído — ")); Serial.print(ciclos);
+    Serial.print(F("\n✓ TESTE 5 CONCLUÍDO — ")); Serial.print(ciclos);
     Serial.println(F(" ciclos realizados"));
 }
 
@@ -387,7 +386,7 @@ void testGripperSync() {
 //   iluminação uniforme sobre toda a pista
 // ============================================================================
 void calibrateThreshold() {
-    Serial.println(F("=== TESTE 6: CALIBRAÇÃO DE THRESHOLD ==="));
+    Serial.println(F("=== TESTE 6: CALIBRAÇÃO DE THRESHOLD ===================="));
     Serial.println(F("Linha branca = valores BAIXOS"));
     Serial.println(F("Fundo preto  = valores ALTOS"));
 
@@ -442,7 +441,7 @@ void calibrateThreshold() {
     }
 
     // ── Análise por sensor ───────────────────────────────────────────────────
-    Serial.println(F("\n=== ANÁLISE POR SENSOR ==="));
+    Serial.println(F("\n=== ANÁLISE POR SENSOR ================================="));
 
     int  sumMaxLine = 0, sumMinBack = 0;
     bool allOk      = true;
@@ -472,7 +471,7 @@ void calibrateThreshold() {
     int recommended = avgMaxLine + (avgMinBack - avgMaxLine) / 2;
 
     // ── Resultado ────────────────────────────────────────────────────────────
-    Serial.println(F("\n=== RESULTADO GLOBAL ==="));
+    Serial.println(F("\n=== RESULTADO GLOBAL ==================================="));
     Serial.print  (F("  Média max linha : ")); Serial.println(avgMaxLine);
     Serial.print  (F("  Média min fundo : ")); Serial.println(avgMinBack);
     Serial.print  (F("  Separação média : ")); Serial.println(avgMinBack - avgMaxLine);
@@ -489,5 +488,5 @@ void calibrateThreshold() {
     Serial.print  (F("  #define THRESHOLD_LINE_SENSOR  "));
     Serial.println(recommended);
 
-    Serial.println(F("\n✓ Teste 6 concluído"));
+    Serial.println(F("\n✓ TESTE 6 CONCLUÍDO"));
 }
